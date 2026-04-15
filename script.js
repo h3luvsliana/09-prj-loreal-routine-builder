@@ -27,20 +27,25 @@ productsContainer.innerHTML = `
    OPENAI HELPER
 —————————————————————————————— */
 async function askOpenAI(messages) {
-  const response = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${OPENAI_API_KEY}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages
-    })
-  });
+  try {
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENAI_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages
+      })
+    });
 
-  const data = await response.json();
-  return data.choices?.[0]?.message?.content || "Sorry, I didn’t understand that.";
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "<p>Sorry, I didn’t understand that.</p>";
+  } catch (err) {
+    console.error("OpenAI error:", err);
+    return "<p>Sorry, something went wrong while generating a response.</p>";
+  }
 }
 
 /* ——————————————————————————————
@@ -209,16 +214,42 @@ if (rtlToggle) {
 }
 
 /* ——————————————————————————————
-   CHAT HELPERS
+   CHAT HISTORY HELPER (MISSING BEFORE)
 —————————————————————————————— */
-function appendChat(role, text) {
-  const label = role === "You" || role === "user" ? "You" : "AI";
-  chatWindow.innerHTML += `<p class="chat-line chat-${label.toLowerCase()}"><strong>${label}:</strong> ${text}</p>`;
+function addToHistory(role, content) {
+  conversationHistory.push({ role, content });
+}
+
+/* ——————————————————————————————
+   PREMIUM CHATBOX HELPERS
+—————————————————————————————— */
+
+/* Create message bubble */
+function addBubble(content, sender = "assistant") {
+  const bubble = document.createElement("div");
+  bubble.classList.add(sender === "user" ? "user-msg" : "assistant-msg");
+  bubble.innerHTML = content;
+  chatWindow.appendChild(bubble);
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-function addToHistory(role, content) {
-  conversationHistory.push({ role, content });
+/* Typing indicator */
+function showTyping() {
+  const typing = document.createElement("div");
+  typing.classList.add("assistant-msg", "typing-bubble");
+
+  typing.innerHTML = `
+    <p><strong>GlowUp inbound… ✨</strong></p>
+    <div class="typing">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
+
+  chatWindow.appendChild(typing);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+  return typing;
 }
 
 /* ——————————————————————————————
@@ -226,11 +257,11 @@ function addToHistory(role, content) {
 —————————————————————————————— */
 generateBtn.addEventListener("click", async () => {
   if (selectedProducts.length === 0) {
-    appendChat("AI", "Please select at least one product first.");
+    addBubble("<p>Please select at least one product first.</p>");
     return;
   }
 
-  appendChat("You", "Generate a routine with my selected products.");
+  addBubble("<p>Generate a routine with my selected products.</p>", "user");
   addToHistory("user", "Generate a routine with my selected products.");
 
   const productList = selectedProducts
@@ -240,8 +271,22 @@ generateBtn.addEventListener("click", async () => {
   const routinePrompt = [
     {
       role: "system",
-      content:
-        "You are a professional skincare and beauty advisor. Create clear, structured routines using only the products the user selected."
+      content: `
+You are a helpful L’Oréal beauty assistant.
+You ONLY answer questions about:
+- L’Oréal products
+- Beauty routines
+- Haircare, skincare, makeup
+- Product recommendations
+
+If a user asks anything unrelated, politely refuse and redirect to beauty topics.
+
+Format ALL responses using clean HTML.
+Use <p> for paragraphs.
+Use <ul><li> for bullet points.
+Use <strong> for product names.
+Never include <html>, <body>, or any page-level tags.
+      `
     },
     {
       role: "user",
@@ -249,10 +294,12 @@ generateBtn.addEventListener("click", async () => {
     }
   ];
 
+  const typing = showTyping();
   const routine = await askOpenAI(routinePrompt);
+  typing.remove();
 
   lastRoutine = routine;
-  appendChat("AI", routine);
+  addBubble(routine);
   addToHistory("assistant", routine);
 });
 
@@ -264,23 +311,36 @@ chatForm.addEventListener("submit", async (e) => {
   const msg = e.target.userInput.value.trim();
   if (!msg) return;
 
-  appendChat("You", msg);
+  addBubble(`<p>${msg}</p>`, "user");
   addToHistory("user", msg);
 
   const messages = [
     {
       role: "system",
-      content:
-        "You are a helpful beauty advisor. Answer questions clearly and naturally."
+      content: `
+You are a helpful L’Oréal beauty assistant.
+You ONLY answer questions about:
+- L’Oréal products
+- Beauty routines
+- Haircare, skincare, makeup
+- Product recommendations
+
+If a user asks anything unrelated, politely refuse and redirect to beauty topics.
+
+Format ALL responses using clean HTML.
+Use <p> for paragraphs.
+Use <ul><li> for bullet points.
+Use <strong> for product names.
+Never include <html>, <body>, or any page-level tags.
+      `
     },
     ...conversationHistory,
     { role: "user", content: msg }
   ];
 
   if (!lastRoutine && /my routine|these products|my products|use them/i.test(msg)) {
-    const warn =
-      "Generate a routine first so I know which products you're using.";
-    appendChat("AI", warn);
+    const warn = "<p>Generate a routine first so I know which products you're using.</p>";
+    addBubble(warn);
     addToHistory("assistant", warn);
     e.target.reset();
     return;
@@ -293,9 +353,11 @@ chatForm.addEventListener("submit", async (e) => {
     });
   }
 
+  const typing = showTyping();
   const aiReply = await askOpenAI(messages);
+  typing.remove();
 
-  appendChat("AI", aiReply);
+  addBubble(aiReply);
   addToHistory("assistant", aiReply);
 
   e.target.reset();
@@ -303,3 +365,4 @@ chatForm.addEventListener("submit", async (e) => {
 
 /* INIT */
 loadProducts();
+

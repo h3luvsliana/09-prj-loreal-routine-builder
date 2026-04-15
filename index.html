@@ -53,32 +53,37 @@
       <div class="selected-products">
         <h2>Selected Products</h2>
         <div id="selectedProductsList"></div>
+          <button id="clearAllSelected" class="clear-all-btn">
+    <i class="fa-solid fa-trash"></i> Clear All Selected
+  </button>
         <button id="generateRoutine" class="generate-btn">
           <i class="fa-solid fa-wand-magic-sparkles"></i> Generate Routine
         </button>
       </div>
 
       <!------- Chat Area ------->
-      <section class="chatbox">
-        <h2>Let's Build Your Routine</h2>
-        <div id="chatWindow" class="chat-window"></div>
+<section class="chatbox">
+  <h2>Let's Build Your Routine</h2>
 
-        <form id="chatForm" class="chat-form">
-          <label for="userInput" class="visually-hidden">Message</label>
-          <input
-            id="userInput"
-            name="userInput"
-            type="text"
-            placeholder="Ask me about products or routines…"
-            autocomplete="off"
-            required
-          />
-          <button type="submit" id="sendBtn">
-            <i class="fa-solid fa-paper-plane"></i>
-            <span class="visually-hidden">Send</span>
-          </button>
-        </form>
-      </section>
+  <!-- Premium chat window (bubbles + gradient + animations) -->
+  <div id="chatWindow" class="chat-window"></div>
+
+  <form id="chatForm" class="chat-form">
+    <label for="userInput" class="visually-hidden">Message</label>
+    <input
+      id="userInput"
+      name="userInput"
+      type="text"
+      placeholder="Ask me about products or routines…"
+      autocomplete="off"
+      required
+    />
+    <button type="submit" id="sendBtn">
+      <i class="fa-solid fa-paper-plane"></i>
+      <span class="visually-hidden">Send</span>
+    </button>
+  </form>
+</section>
 
       <!------- Footer Links ------->
       <footer class="site-footer">

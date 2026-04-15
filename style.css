@@ -223,19 +223,105 @@ body {
   margin-bottom: 20px;
 }
 
+/* GOLD → WHITE GRADIENT BACKGROUND + FLEX COLUMN */
 .chat-window {
   padding: 20px;
   font-size: 17px;
   line-height: 1.5;
-  height: 250px;
+  height: 320px;
   overflow-y: auto;
-  background: var(--gray-light);
   border-radius: 8px;
   margin-bottom: 20px;
+  background: linear-gradient(to bottom, #f7e7c6, #ffffff);
+  display: flex;
+  flex-direction: column;
 }
 
-.chat-line strong {
-  color: var(--loreal-red);
+/* ——————————————————————
+   PREMIUM CHAT BUBBLES
+—————————————————————— */
+.assistant-msg {
+  background: var(--loreal-black);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 14px;
+  max-width: 75%;
+  margin-bottom: 14px;
+  align-self: flex-start;
+  animation: fadeSlide 0.4s ease;
+}
+
+.user-msg {
+  background: var(--loreal-gold);
+  color: #000;
+  padding: 14px 18px;
+  border-radius: 14px;
+  max-width: 75%;
+  margin-bottom: 14px;
+  align-self: flex-end;
+  animation: fadeSlide 0.4s ease;
+}
+
+/* Fade + Slide Animation */
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ——————————————————————
+   TYPING INDICATOR
+—————————————————————— */
+.typing-bubble {
+  background: var(--loreal-black);
+  color: #fff;
+  padding: 14px 18px;
+  border-radius: 14px;
+  max-width: 75%;
+  margin-bottom: 14px;
+  align-self: flex-start;
+}
+
+.typing {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  background: #fff;
+  border-radius: 50%;
+  animation: blink 1.4s infinite ease-in-out;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes blink {
+  0% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
+  20% {
+    opacity: 1;
+    transform: translateY(-2px);
+  }
+  100% {
+    opacity: 0.2;
+    transform: translateY(0);
+  }
 }
 
 /* ——————————————————————
@@ -315,3 +401,22 @@ body.rtl .chat-form {
 body.rtl .selected-item {
   flex-direction: row-reverse;
 }
+
+.clear-all-btn {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  background: var(--loreal-red);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.clear-all-btn:hover {
+  background: #b51f2f;
+}
+

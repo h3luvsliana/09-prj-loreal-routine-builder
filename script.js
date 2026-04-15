@@ -9,6 +9,7 @@ const productSearchInput = document.getElementById("productSearch");
 
 const clearAllBtn = document.getElementById("clearAllSelected");
 const rtlToggle = document.getElementById("rtlToggle");
+const userInput = document.getElementById("userInput");
 
 /* GLOBAL STATE */
 let allProducts = [];
@@ -24,26 +25,20 @@ productsContainer.innerHTML = `
 `;
 
 /* ——————————————————————————————
-   OPENAI HELPER
+   OPENAI VIA CLOUDFLARE WORKER
 —————————————————————————————— */
 async function askOpenAI(messages) {
   try {
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+    const response = await fetch("https://loreal-routine-worker.lianarenarocquel.workers.dev/chat", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${OPENAI_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini",
-        messages
-      })
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages })
     });
 
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "<p>Sorry, I didn’t understand that.</p>";
   } catch (err) {
-    console.error("OpenAI error:", err);
+    console.error("Worker error:", err);
     return "<p>Sorry, something went wrong while generating a response.</p>";
   }
 }
@@ -139,7 +134,7 @@ function renderSelectedProducts() {
       (p) => `
       <div class="selected-item">
         <span>${p.name}</span>
-        <button class="remove-btn" data-id="${p.id}">✕</button>
+        <button class="remove-btn" data-id="${p.id}" aria-label="Remove ${p.name}">✕</button>
       </div>
     `
     )
@@ -206,15 +201,28 @@ if (productSearchInput) {
   productSearchInput.addEventListener("input", refreshVisibleProducts);
 }
 
-/* RTL TOGGLE */
+/* ——————————————————————————————
+   RTL TOGGLE + AUTO-DETECT
+—————————————————————————————— */
+const htmlEl = document.documentElement;
+
 if (rtlToggle) {
   rtlToggle.addEventListener("click", () => {
-    document.body.classList.toggle("rtl");
+    htmlEl.dir = htmlEl.dir === "rtl" ? "ltr" : "rtl";
+  });
+}
+
+if (userInput) {
+  userInput.addEventListener("input", () => {
+    const value = userInput.value.trim();
+    const rtlPattern = /[\u0590-\u05FF\u0600-\u06FF]/; // Hebrew + Arabic
+
+    htmlEl.dir = rtlPattern.test(value) ? "rtl" : "ltr";
   });
 }
 
 /* ——————————————————————————————
-   CHAT HISTORY HELPER (MISSING BEFORE)
+   CHAT HISTORY HELPER
 —————————————————————————————— */
 function addToHistory(role, content) {
   conversationHistory.push({ role, content });
@@ -223,8 +231,6 @@ function addToHistory(role, content) {
 /* ——————————————————————————————
    PREMIUM CHATBOX HELPERS
 —————————————————————————————— */
-
-/* Create message bubble */
 function addBubble(content, sender = "assistant") {
   const bubble = document.createElement("div");
   bubble.classList.add(sender === "user" ? "user-msg" : "assistant-msg");
@@ -233,7 +239,6 @@ function addBubble(content, sender = "assistant") {
   chatWindow.scrollTop = chatWindow.scrollHeight;
 }
 
-/* Typing indicator */
 function showTyping() {
   const typing = document.createElement("div");
   typing.classList.add("assistant-msg", "typing-bubble");
@@ -365,4 +370,3 @@ Never include <html>, <body>, or any page-level tags.
 
 /* INIT */
 loadProducts();
-
